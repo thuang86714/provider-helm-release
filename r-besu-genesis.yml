@@ -13,7 +13,7 @@ spec:
 #        name: oci-creds
 #        namespace: default
 #       url: "oci://localhost:5000/helm-charts/wordpress:9.3.19"
-    namespace: crossplane-tommy-test
+    namespace: crossplane-system
 #   insecureSkipTLSVerify: true
 #   skipCreateNamespace: true
 #   wait: true
