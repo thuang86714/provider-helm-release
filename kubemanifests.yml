@@ -4,96 +4,285 @@ items:
     kind: Service
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
-        kompose.service.type: LoadBalancer
+        kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
         kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
-        io.kompose.service: frontend-tcp
-      name: frontend-tcp
+        io.kompose.service: demo111-2830315-bootnode-0-1
+      name: demo111-2830315-bootnode-0-1
     spec:
       ports:
-        - name: "80"
-          port: 80
-          targetPort: 80
+        - name: "48864"
+          port: 48864
+          protocol: UDP
+          targetPort: 30301
+        - name: "39032"
+          port: 39032
+          targetPort: 30303
       selector:
-        io.kompose.service: frontend
-      type: LoadBalancer
+        io.kompose.service: demo111-2830315-bootnode-0-1
     status:
       loadBalancer: {}
   - apiVersion: v1
     kind: Service
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
+        kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
         kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
-        io.kompose.service: redis-master
-      name: redis-master
+        io.kompose.service: demo111-2830315-member-0-1
+      name: demo111-2830315-member-0-1
     spec:
       ports:
-        - name: "6379"
-          port: 6379
-          targetPort: 6379
+        - name: "20009"
+          port: 20009
+          targetPort: 8545
       selector:
-        io.kompose.service: redis-master
+        io.kompose.service: demo111-2830315-member-0-1
     status:
       loadBalancer: {}
   - apiVersion: v1
     kind: Service
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
+        kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
         kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
-        io.kompose.service: redis-slave
-      name: redis-slave
+        io.kompose.service: demo111-2830315-monitor-frontend
+      name: demo111-2830315-monitor-frontend
     spec:
       ports:
-        - name: "6379"
-          port: 6379
-          targetPort: 6379
+        - name: "18646"
+          port: 18646
+          targetPort: 3000
       selector:
-        io.kompose.service: redis-slave
+        io.kompose.service: demo111-2830315-monitor-frontend
     status:
       loadBalancer: {}
   - apiVersion: apps/v1
     kind: Deployment
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
-        kompose.service.type: LoadBalancer
+        kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
         kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
-        io.kompose.service: frontend
-      name: frontend
+        io.kompose.service: demo111-2830315-bootnode-0-1
+      name: demo111-2830315-bootnode-0-1
     spec:
       replicas: 1
       selector:
         matchLabels:
-          io.kompose.service: frontend
+          io.kompose.service: demo111-2830315-bootnode-0-1
       strategy: {}
       template:
         metadata:
           annotations:
-            kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
-            kompose.service.type: LoadBalancer
+            kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
             kompose.version: 1.26.0 (40646f47)
           creationTimestamp: null
           labels:
-            io.kompose.service: frontend
+            io.kompose.network/chainnet: "true"
+            io.kompose.service: demo111-2830315-bootnode-0-1
         spec:
           containers:
             - env:
-                - name: GET_HOSTS_FROM
-                  value: dns
-              image: gcr.io/google-samples/gb-frontend:v4
-              name: frontend
+                - name: nodekeyhex
+                  value: 9ec2c972e13ed11c2542d9a15bd95962fa38676db691a214936471251bc9cc03
+              image: mlabsg/ml-poa-bootnode:1.8.13
+              name: demo111-2830315-bootnode-0-1
               ports:
-                - containerPort: 80
+                - containerPort: 30301
+                  protocol: UDP
+                - containerPort: 30303
+              resources: {}
+          restartPolicy: Always
+    status: {}
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      creationTimestamp: null
+      name: chainnet
+    spec:
+      ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                  io.kompose.network/chainnet: "true"
+      podSelector:
+        matchLabels:
+          io.kompose.network/chainnet: "true"
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: demo111-2830315-member-0-1
+      name: demo111-2830315-member-0-1
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: demo111-2830315-member-0-1
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
+            kompose.version: 1.26.0 (40646f47)
+          creationTimestamp: null
+          labels:
+            io.kompose.network/chainnet: "true"
+            io.kompose.service: demo111-2830315-member-0-1
+        spec:
+          containers:
+            - env:
+                - name: address
+                  value: 0x796496919606194450e27a55dee51b9e0628a590
+                - name: bootnodeId
+                  value: d10dd7865e43ad889b2770a5b12d7a3705290ca6cb2c6d9c1d597d6ccd45de14ad9ac63877d83449914fad5787465f0e5142cd23cee9a8f945142f68c14974a9
+                - name: bootnodeIp
+                  value: 172.168.136.101
+                - name: networkId
+                  value: "3018"
+              image: mlabsg/ml-poa-member:1.8.13
+              name: demo111-2830315-member-0-1
+              ports:
+                - containerPort: 8545
+              resources: {}
+              volumeMounts:
+                - mountPath: /root/.ethereum
+                  name: demo111-2830315-member-0-1-claim0
+                - mountPath: /root/genesis
+                  name: demo111-2830315-member-0-1-claim1
+          restartPolicy: Always
+          volumes:
+            - name: demo111-2830315-member-0-1-claim0
+              persistentVolumeClaim:
+                claimName: demo111-2830315-member-0-1-claim0
+            - name: demo111-2830315-member-0-1-claim1
+              persistentVolumeClaim:
+                claimName: demo111-2830315-member-0-1-claim1
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: demo111-2830315-member-0-1-claim0
+      name: demo111-2830315-member-0-1-claim0
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: demo111-2830315-member-0-1-claim1
+      name: demo111-2830315-member-0-1-claim1
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: demo111-2830315-monitor-backend
+      name: demo111-2830315-monitor-backend
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: demo111-2830315-monitor-backend
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
+            kompose.version: 1.26.0 (40646f47)
+          creationTimestamp: null
+          labels:
+            io.kompose.network/chainnet: "true"
+            io.kompose.service: demo111-2830315-monitor-backend
+        spec:
+          containers:
+            - image: mlabsg/ml-poa-be:latest
+              name: demo111-2830315-monitor-backend
+              resources: {}
+              volumeMounts:
+                - mountPath: /root/app
+                  name: demo111-2830315-monitor-backend-claim0
+          restartPolicy: Always
+          volumes:
+            - name: demo111-2830315-monitor-backend-claim0
+              persistentVolumeClaim:
+                claimName: demo111-2830315-monitor-backend-claim0
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: demo111-2830315-monitor-backend-claim0
+      name: demo111-2830315-monitor-backend-claim0
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: demo111-2830315-monitor-frontend
+      name: demo111-2830315-monitor-frontend
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: demo111-2830315-monitor-frontend
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
+            kompose.version: 1.26.0 (40646f47)
+          creationTimestamp: null
+          labels:
+            io.kompose.network/chainnet: "true"
+            io.kompose.service: demo111-2830315-monitor-frontend
+        spec:
+          containers:
+            - image: mlabsg/ml-poa-fe:latest
+              name: demo111-2830315-monitor-frontend
+              ports:
+                - containerPort: 3000
               resources: {}
           restartPolicy: Always
     status: {}
@@ -101,70 +290,83 @@ items:
     kind: Deployment
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
+        kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
         kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
-        io.kompose.service: redis-master
-      name: redis-master
+        io.kompose.service: demo111-2830315-sealer-1-1
+      name: demo111-2830315-sealer-1-1
     spec:
       replicas: 1
       selector:
         matchLabels:
-          io.kompose.service: redis-master
-      strategy: {}
+          io.kompose.service: demo111-2830315-sealer-1-1
+      strategy:
+        type: Recreate
       template:
         metadata:
           annotations:
-            kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
+            kompose.cmd: kompose convert -f docker-compose.yml -o test.yml
             kompose.version: 1.26.0 (40646f47)
           creationTimestamp: null
           labels:
-            io.kompose.service: redis-master
-        spec:
-          containers:
-            - image: k8s.gcr.io/redis:e2e
-              name: redis-master
-              ports:
-                - containerPort: 6379
-              resources: {}
-          restartPolicy: Always
-    status: {}
-  - apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      annotations:
-        kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
-        kompose.version: 1.26.0 (40646f47)
-      creationTimestamp: null
-      labels:
-        io.kompose.service: redis-slave
-      name: redis-slave
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          io.kompose.service: redis-slave
-      strategy: {}
-      template:
-        metadata:
-          annotations:
-            kompose.cmd: kompose convert -f dc-example.yml -o nubemanifests.yml
-            kompose.version: 1.26.0 (40646f47)
-          creationTimestamp: null
-          labels:
-            io.kompose.service: redis-slave
+            io.kompose.network/chainnet: "true"
+            io.kompose.service: demo111-2830315-sealer-1-1
         spec:
           containers:
             - env:
-                - name: GET_HOSTS_FROM
-                  value: dns
-              image: gcr.io/google_samples/gb-redisslave:v3
-              name: redis-slave
-              ports:
-                - containerPort: 6379
+                - name: address
+                  value: 0xf71746f5358c6bfcd77d8b72fbe2cb7eb392fd1f
+                - name: bootnodeId
+                  value: d10dd7865e43ad889b2770a5b12d7a3705290ca6cb2c6d9c1d597d6ccd45de14ad9ac63877d83449914fad5787465f0e5142cd23cee9a8f945142f68c14974a9
+                - name: bootnodeIp
+                  value: 172.168.136.101
+                - name: networkId
+                  value: "3018"
+              image: mlabsg/ml-poa-sealer:1.8.13
+              name: demo111-2830315-sealer-1-1
               resources: {}
+              volumeMounts:
+                - mountPath: /root/.ethereum
+                  name: demo111-2830315-sealer-1-1-claim0
+                - mountPath: /root/genesis
+                  name: demo111-2830315-sealer-1-1-claim1
           restartPolicy: Always
+          volumes:
+            - name: demo111-2830315-sealer-1-1-claim0
+              persistentVolumeClaim:
+                claimName: demo111-2830315-sealer-1-1-claim0
+            - name: demo111-2830315-sealer-1-1-claim1
+              persistentVolumeClaim:
+                claimName: demo111-2830315-sealer-1-1-claim1
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: demo111-2830315-sealer-1-1-claim0
+      name: demo111-2830315-sealer-1-1-claim0
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: demo111-2830315-sealer-1-1-claim1
+      name: demo111-2830315-sealer-1-1-claim1
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
     status: {}
 kind: List
 metadata: {}
